@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import external_api
+from cs188_a3 import external_api
 
 
 class FakeResponse:

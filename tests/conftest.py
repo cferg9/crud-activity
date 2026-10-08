@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from app import create_app
+from cs188_a3.app import create_app
 
 
 @pytest.fixture

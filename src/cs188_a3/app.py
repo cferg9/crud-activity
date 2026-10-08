@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sqlite3
-
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -11,24 +10,21 @@ from typing import Any
 from flask import Flask, g, request, url_for
 from flask_restful import Api, Resource
 
-import external_api
-import services
-
-from auth import auth_required, hash_password
-from db import connect, initialize_database
-from validation import (
+from . import external_api, services
+from .auth import auth_required, hash_password
+from .db import connect, initialize_database
+from .validation import (
     ValidationError,
     json_object,
     validate_city,
     validate_limit,
+    validate_password,
     validate_positive_query_int,
     validate_trip_create,
     validate_trip_id,
     validate_trip_patch,
-    validate_password,
     validate_username,
 )
-
 
 DEFAULT_DATABASE = Path(__file__).with_name("travel.db")
 

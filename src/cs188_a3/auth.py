@@ -1,9 +1,10 @@
 """Authentication helpers for the Travel Planner API."""
-
+from __future__ import annotations
 from functools import wraps
 from typing import Callable
 
-import services
+
+from . import services
 from flask import Response, g, request
 from werkzeug.security import check_password_hash, generate_password_hash
 
