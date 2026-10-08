@@ -137,48 +137,33 @@ def get_trip(
 def list_trips(
     connection: sqlite3.Connection,
     destination: str | None,
+    start_date: str | None,
     limit: int,
     offset: int,
-) -> list[dict[str, Any]]:
-    """Return trips with optional filtering and pagination."""
-    if destination is None:
-        rows = connection.execute(
-            """
-            SELECT
-                id,
-                destination,
-                start_date,
-                days,
-                owner_id,
-                created_at
-            FROM trips
-            ORDER BY id
-            LIMIT ? OFFSET ?
-            """,
-            (limit, offset),
-        ).fetchall()
+) -> list[dict]:
+    """Return trips matching optional filters."""
 
-    else:
-        rows = connection.execute(
-            """
-            SELECT
-                id,
-                destination,
-                start_date,
-                days,
-                owner_id,
-                created_at
-            FROM trips
-            WHERE LOWER(destination) = LOWER(?)
-            ORDER BY id
-            LIMIT ? OFFSET ?
-            """,
-            (
-                destination,
-                limit,
-                offset,
-            ),
-        ).fetchall()
+    query = """
+        SELECT id, destination, start_date, days, owner_id, created_at
+        FROM trips
+        WHERE 1 = 1
+    """
+
+    parameters = []
+
+    if destination:
+        query += " AND LOWER(destination) = LOWER(?)"
+        parameters.append(destination)
+
+    if start_date:
+        query += " AND start_date = ?"
+        parameters.append(start_date)
+
+    query += " ORDER BY id LIMIT ? OFFSET ?"
+
+    parameters.extend([limit, offset])
+
+    rows = connection.execute(query, parameters).fetchall()
 
     return [dict(row) for row in rows]
 

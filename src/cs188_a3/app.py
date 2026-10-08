@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,7 @@ from flask_restful import Api, Resource
 
 import external_api
 import services
+
 from auth import auth_required, hash_password
 from db import connect, initialize_database
 from validation import (
@@ -35,8 +37,8 @@ def create_app(db_path: str | Path = DEFAULT_DATABASE) -> Flask:
     """Create and configure the Flask application."""
     app = Flask(__name__)
     app.config["DATABASE"] = str(db_path)
-    api = Api(app)
 
+    api = Api(app)
     initialize_database(app.config["DATABASE"])
 
     @app.before_request
@@ -78,7 +80,6 @@ def create_app(db_path: str | Path = DEFAULT_DATABASE) -> Flask:
             """Register a new user."""
             try:
                 data = json_object(request)
-
                 unknown = set(data) - {"username", "password"}
 
                 if unknown:
@@ -133,6 +134,8 @@ def create_app(db_path: str | Path = DEFAULT_DATABASE) -> Flask:
                 if destination is not None:
                     destination = validate_city(destination)
 
+                start_date = request.args.get("start_date")
+
                 limit = validate_limit(
                     request.args.get("limit")
                 )
@@ -149,6 +152,7 @@ def create_app(db_path: str | Path = DEFAULT_DATABASE) -> Flask:
             trips = services.list_trips(
                 g.db,
                 destination,
+                start_date,
                 limit,
                 offset,
             )
@@ -217,9 +221,7 @@ def create_app(db_path: str | Path = DEFAULT_DATABASE) -> Flask:
             """Update only the fields supplied in the request body."""
             try:
                 validate_trip_id(trip_id)
-
                 data = json_object(request)
-
                 changes = validate_trip_patch(data)
 
                 trip = services.update_trip(
@@ -295,11 +297,11 @@ def create_app(db_path: str | Path = DEFAULT_DATABASE) -> Flask:
 
                     if unknown:
                         names = ", ".join(sorted(unknown))
-
                         raise ValidationError(
                             f"Unrecognized field(s): {names}"
                         )
 
+                if "city" not in data:
                     raise ValidationError("city is required")
 
                 city = validate_city(data["city"])
@@ -315,9 +317,7 @@ def create_app(db_path: str | Path = DEFAULT_DATABASE) -> Flask:
         ) -> tuple[dict[str, Any], int]:
             """Call the external services and handle failures."""
             try:
-                weather = external_api.get_weather_for_city(
-                    city
-                )
+                weather = external_api.get_weather_for_city(city)
 
             except LookupError:
                 return {"message": "City not found"}, 404
