@@ -1,0 +1,20 @@
+[project]
+name = "cs188-a3"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Colton", email = "cmfergie9@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "flask>=3.1.3",
+    "flask-restful>=0.3.10",
+]
+
+[project.scripts]
+cs188-a3 = "cs188_a3:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
