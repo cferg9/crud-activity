@@ -1,77 +1,57 @@
 """Authentication helpers for the Travel Planner API."""
 
-from __future__ import annotations
-
 from functools import wraps
-from typing import Any, Callable
+from typing import Callable
 
-from flask import g, request
-from werkzeug.security import (
-    check_password_hash,
-    generate_password_hash,
-)
-
-from services import get_user_by_username
+import services
+from flask import Response, g, request
+from werkzeug.security import check_password_hash, generate_password_hash
 
 
 def hash_password(password: str) -> str:
-    """Create a secure password hash."""
+    """Hash a user's password before storing it."""
     return generate_password_hash(password)
 
 
-def verify_password(
-    password_hash: str,
-    password: str,
-) -> bool:
-    """Check a password against a stored hash."""
-    return check_password_hash(
-        password_hash,
-        password,
-    )
+def verify_password(password_hash: str, password: str) -> bool:
+    """Check whether a password matches its stored hash."""
+    return check_password_hash(password_hash, password)
 
 
-def auth_required(
-    function: Callable[..., Any],
-) -> Callable[..., Any]:
+def auth_required(function: Callable) -> Callable:
     """Require valid HTTP Basic Authentication."""
+
     @wraps(function)
-    def wrapper(
-        *args: Any,
-        **kwargs: Any,
-    ) -> Any:
-        credentials = request.authorization
+    def wrapper(*args, **kwargs):
+        authorization = request.authorization
 
-        if (
-            credentials is None
-            or not credentials.username
-            or credentials.password is None
-        ):
-            return {
-                "message": "Authentication required"
-            }, 401
+        if authorization is None:
+            return Response(
+                '{"message": "Authentication required."}',
+                status=401,
+                content_type="application/json",
+                headers={"WWW-Authenticate": 'Basic realm="Travel Planner API"'},
+            )
 
-        user = get_user_by_username(
+        user = services.get_user_by_username(
             g.db,
-            credentials.username,
+            authorization.username,
         )
 
-        if (
-            user is None
-            or not verify_password(
-                user["password_hash"],
-                credentials.password,
-            )
+        if user is None or not verify_password(
+            user["password_hash"],
+            authorization.password,
         ):
-            return {
-                "message": "Invalid username or password"
-            }, 401
+            return Response(
+                '{"message": "Invalid username or password."}',
+                status=401,
+                content_type="application/json",
+                headers={"WWW-Authenticate": 'Basic realm="Travel Planner API"'},
+            )
 
         g.user_id = user["id"]
         g.username = user["username"]
 
-        return function(
-            *args,
-            **kwargs,
-        )
+        return function(*args, **kwargs)
 
     return wrapper
