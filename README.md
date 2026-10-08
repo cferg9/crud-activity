@@ -679,3 +679,6 @@ feature/documentation
 
 The feature branches are retained in the repository as required.
 
+##AI Usage
+
+AI assistance was used during development to help understand assignment requirements, troubleshoot errors, explain Python and Flask concepts, and assist with code structure and testing.
