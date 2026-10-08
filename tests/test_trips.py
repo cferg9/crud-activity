@@ -395,3 +395,96 @@ def test_invalid_pagination(client) -> None:
     )
 
     assert response.status_code == 400
+
+    def test_create_trip_rejects_server_controlled_field(client):
+        register_user(client, "alice", "password123")
+
+    response = client.post(
+        "/trips",
+        json={
+            "destination": "Chicago",
+            "start_date": "2026-12-01",
+            "days": 3,
+            "owner_id": 99,
+        },
+        headers=basic_auth("alice", "password123"),
+    )
+
+    assert response.status_code == 400
+    assert "owner_id" in response.get_json()["message"]
+
+
+def test_create_trip_rejects_blank_destination(client):
+    register_user(client, "alice", "password123")
+
+    response = client.post(
+        "/trips",
+        json={
+            "destination": "   ",
+            "start_date": "2026-12-01",
+            "days": 3,
+        },
+        headers=basic_auth("alice", "password123"),
+    )
+
+    assert response.status_code == 400
+
+
+def test_create_trip_rejects_invalid_days(client):
+    register_user(client, "alice", "password123")
+
+    response = client.post(
+        "/trips",
+        json={
+            "destination": "Chicago",
+            "start_date": "2026-12-01",
+            "days": 0,
+        },
+        headers=basic_auth("alice", "password123"),
+    )
+
+    assert response.status_code == 400
+
+
+def test_delete_trip_requires_authentication(client):
+    register_user(client, "alice", "password123")
+
+    response = client.post(
+        "/trips",
+        json={
+            "destination": "Chicago",
+            "start_date": "2026-12-01",
+            "days": 3,
+        },
+        headers=basic_auth("alice", "password123"),
+    )
+
+    trip_id = response.get_json()["id"]
+
+    response = client.delete(f"/trips/{trip_id}")
+
+    assert response.status_code == 401
+
+
+def test_non_owner_cannot_delete_trip(client):
+    register_user(client, "alice", "password123")
+    register_user(client, "bob", "password123")
+
+    response = client.post(
+        "/trips",
+        json={
+            "destination": "Chicago",
+            "start_date": "2026-12-01",
+            "days": 3,
+        },
+        headers=basic_auth("alice", "password123"),
+    )
+
+    trip_id = response.get_json()["id"]
+
+    response = client.delete(
+        f"/trips/{trip_id}",
+        headers=basic_auth("bob", "password123"),
+    )
+
+    assert response.status_code == 403
