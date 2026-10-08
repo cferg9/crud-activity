@@ -1,10 +1,14 @@
-# Python-generated files
+.venv/
 __pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+.pytest_cache/
+*.pyc
 
-# Virtual environments
-.venv
+.env
+
+travel.db
+*.db
+
+MyCertificate.crt
+MyCertificate.key
+
+.DS_Store
