@@ -37,9 +37,7 @@ def get_location(
             },
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
-
         response.raise_for_status()
-
         data = response.json()
 
     except (
@@ -82,9 +80,7 @@ def get_current_weather(
             },
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
-
         response.raise_for_status()
-
         return response.json()
 
     except (
@@ -96,32 +92,23 @@ def get_current_weather(
         ) from exc
 
 
-def get_weather_for_city(
-    city: str,
-) -> dict[str, Any]:
-    """Find a city and return its current weather."""
+def get_weather_for_city(city: str) -> dict[str, Any]:
+    """Get current weather information for a city."""
     location = get_location(city)
 
-    forecast = get_current_weather(
+    weather = get_current_weather(
         location["latitude"],
         location["longitude"],
     )
 
-    current = forecast.get(
-        "current",
-        {},
-    )
+    current = weather["current"]
 
     return {
         "city": location["name"],
         "country": location.get("country"),
         "latitude": location["latitude"],
         "longitude": location["longitude"],
-        "temperature_f": current.get(
-            "temperature_2m"
-        ),
-        "weather_code": current.get(
-            "weather_code"
-        ),
+        "temperature_f": current.get("temperature_2m"),
+        "weather_code": current.get("weather_code"),
         "time": current.get("time"),
     }
